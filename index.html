@@ -1,0 +1,219 @@
+<style>
+textarea {
+  resize: none;
+  width:700px;
+  height:500px;
+}
+.messagetodecode {
+    resize: none;
+  width:700px;
+  height:300px;
+}
+.decodeResult {
+    resize: none;
+  width:700px;
+  height:300px;
+}
+</style>
+<center class="decodePage" style="display:none;">
+<button class="encode">
+Want to encode a message? Click me!
+</button>
+<br>
+<br>
+  <h1>
+  Message to Decode:
+  </h1>
+  <br>
+  <br>
+  <input type="file" accept=".enc" onchange="read(this)">
+  <br>
+  <h1>
+  Result:
+  </h1>
+  <br>
+  <textarea class="decodeResult"></textarea>
+</center>
+<center class="encodePage">
+<button class="decode">
+Want to Decode a message? Click me!
+</button>
+<br>
+<br>
+  Message to Encode: <input class="thingtoencode" type="text">
+  <br>
+  <br>
+  <button class="start">
+  encode
+  </button>
+  <br>
+  <br>
+  Results Console
+  <br>
+  <textarea class="results" readonly></textarea>
+  <br>
+  <br>
+  <button class="download" style="display:none;">
+  Download
+  </button>
+</center>
+<script>
+var start = document.querySelector(".start");
+var results = document.querySelector(".results");
+var toencode = document.querySelector(".thingtoencode");
+var started = false;
+var currentTime = "";
+var timer = 0;
+var download = document.querySelector(".download");
+var decodeResult = document.querySelector(".decodeResult");
+var encode = document.querySelector(".encode");
+var decode = document.querySelector(".decode");
+var encodePage = document.querySelector(".encodePage");
+var decodePage = document.querySelector(".decodePage");
+
+function resetTime(){
+var d = new Date();
+currentTime = d.toLocaleTimeString();
+}
+function addTime(){
+timer++;
+}
+
+function clearConsole(){
+results.value = "";
+}
+
+function startEncode(){
+timer = 0;
+if(toencode.value === ""){
+clearConsole();
+resetTime();
+results.value += "[" + currentTime + "]" + " Message to Encode must not be empty! \n";
+}else{
+started = true;
+clearConsole();
+resetTime();
+results.value += "[" + currentTime + "]" + " Encoding Started. \n";
+resetTime();
+results.value += "[" + currentTime + "]" + " Encoding Power: Heavy \n";
+resetTime();
+results.value += "[" + currentTime + "]" + ` Message to encode: ${toencode.value} \n`;
+resetTime();
+results.value += "[" + currentTime + "]" + " Starting operation... \n";
+var e1 = toencode.value;
+var ended = false;
+var finalencode;
+function generateFile(){
+var data = `{"data":"${finalencode}"}`
+var data2 = btoa(data);
+var blob = new Blob([data2], {type: "application/json"});
+var url = URL.createObjectURL(blob);
+download.style.display = "";
+function downloadf(){
+var a = document.createElement("a");
+a.href = url;
+a.download = "EncodedMessage.enc";
+a.click();
+download.removeEventListener("click", downloadf);
+location.reload();
+}
+
+download.addEventListener("click", downloadf);
+}
+function encodeLoop(index) {
+  if (index < 16) {
+    var e2 = "";
+    e2 = btoa(e1);
+    e1 = e2;
+    e1 = btoa(e2);
+    e2 = "";
+    resetTime();
+    results.value += "[" + currentTime + "]" + ` Encoding: ${index} [${e1}] \n`;
+    if(index === 15){
+    ended = true;
+    end();
+    }
+
+    setTimeout(function() {
+      encodeLoop(index + 1);
+    }, 100);
+  }
+}
+
+encodeLoop(0);
+function end(){
+finalencode = e1;
+if(ended){
+clearConsole();
+resetTime();
+results.value += "[" + currentTime + "]" + ` Encoding Complete. Result: ${finalencode}`
+setTimeout(function(){
+clearConsole();
+resetTime();
+results.value += "[" + currentTime + "]" + " Adding Extra Layer of Encoding...";
+var encoder = new TextEncoder();
+var encoded = encoder.encode(finalencode);
+var uint = Array.from(encoded).join(", ");
+finalencode = btoa(uint);
+setTimeout(function(){
+clearConsole();
+resetTime();
+started = false;
+results.value += "[" + currentTime + "]" + ` Encoding Complete! Completed in ${timer}s \n`;
+generateFile();
+resetTime();
+results.value += "[" + currentTime + "]" + " Click the download button to download your result. \n";
+resetTime();
+start.style.display = "none";
+results.value += "[" + currentTime + "]" + " Refresh the website to use again.";
+},1000);
+},500);
+}
+}
+}
+}
+
+start.addEventListener("click", function(){
+if(!started){
+startEncode();
+}
+});
+setInterval(function(){
+if(started){
+addTime();
+}else {
+return;
+}
+},1000);
+function read(input){
+var file = input.files[0];
+var reader = new FileReader();
+reader.onload = function(){
+var result = reader.result;
+var decoded1 = atob(result);
+var json = JSON.parse(decoded1);
+var jsonData = json.data;
+var decoded2 = atob(jsonData);
+var uintNumbers = decoded2.split(", ").map(Number);
+var decoder = new TextDecoder().decode(new Uint8Array(uintNumbers));
+var p1 = decoder;
+for(let i = 0; i < 16; i++){
+var p2 = "";
+p2 = atob(p1);
+p1 = p2;
+p1 = atob(p2);
+p2 = "";
+}
+decodeResult.value = p1;
+}
+reader.readAsText(file);
+}
+encode.addEventListener("click", function(){
+encodePage.style.display = "";
+decodePage.style.display = "none";
+});
+decode.addEventListener("click", function(){
+decodePage.style.display = "";
+encodePage.style.display = "none";
+});
+</script>
